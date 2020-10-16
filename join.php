@@ -2,47 +2,38 @@
 include('connect.php');
 
 session_start();
-if(isset($_SESSION['id']) && $_SESSION['login_type']=='user'){
+if(isset($_SESSION['id']) && $_SESSION['login_type']=='user'){	
 	$userid = $_SESSION['userid'];
 }
 else{
 	echo '<script>alert("Access denied");window.location.assign("index.php");</script>';
 }
 	$select = "SELECT * FROM user";
-    $all = mysqli_query($con, $select);
+	$all = mysqli_query($con, $select);
+
+$select = "SELECT * FROM user where email = '$userid' ";
+$query = mysqli_query($con, $select);
+$get = mysqli_fetch_array($query);
+$status = $get['status'];
+
 ?>
 <?php
 //User cliced on join
-if(isset($_POST['submit'])){
-	$side='';
+if(isset($_POST['submit'])){	
 	$name = mysqli_real_escape_string($con,$_POST['name']);
 	$email = mysqli_real_escape_string($con,$_POST['email']);
 	$mobile = mysqli_real_escape_string($con,$_POST['mobile']);
-	$address = mysqli_real_escape_string($con,$_POST['address']);	
-	$under_userid = mysqli_real_escape_string($con,$_POST['under_userid']);
-	$side = mysqli_real_escape_string($con,$_POST['side']);
+	$address = mysqli_real_escape_string($con,$_POST['address']);		
 	$password = $mobile;
 	
 	$flag = 0;
 	
-	if($name!='' && $email!='' && $mobile!='' && $address!='' && $under_userid!='' && $side!=''){
+	if($name!='' && $email!='' && $mobile!='' && $address!=''){
 		//User filled all the fields.
 		if(email_check($email)){
-			//Email is ok
-			if(!email_check($under_userid)){
-				//Under userid is ok
-				if(side_check($under_userid,$side)){
-					//Side check
-					$flag=1;
-				}
-				else{
-					echo '<script>alert("The side you selected is not available.");</script>';
-				}
-			}
-			else{
-				//check under userid
-				echo '<script>alert("Invalid Under userid.");</script>';
-			}
+					//Insert into User profile
+		$query = mysqli_query($con,"insert into user(`name`,`email`,`password`,`mobile`, `role`, `status`, `address`) values('$name','$email','$password','$mobile', 'user', 'pending', '$address')");
+		echo '<script>alert("New user Created");window.location.assign("home.php");</script>';
 		}
 		else{
 			//check email
@@ -52,65 +43,6 @@ if(isset($_POST['submit'])){
 	else{
 		//check all fields are fill
 		echo '<script>alert("Please fill all the fields.");</script>';
-	}
-	
-	//Now we are heree
-	//It means all the information is correct
-	//Now we will save all the information
-	if($flag==1){
-		
-		//Insert into User profile
-		$query = mysqli_query($con,"insert into user(`name`,`email`,`password`,`mobile`,`address`,`under_userid`,`side`) values('$name','$email','$password','$mobile','$address','$under_userid','$side')");
-		
-		//Insert into Tree
-		//So that later on we can view tree.
-		$query = mysqli_query($con,"insert into tree(`userid`) values('$email')");
-		
-		//Insert to side
-		$query = mysqli_query($con,"update tree set `$side`='$email' where userid='$under_userid'");
-		//This is the main part to join a user\
-		//If you will do any mistake here. Then the site will not work.
-		
-		//Update count and Income.
-		$temp_under_userid = $under_userid;
-		$temp_side_count = $side.'count'; //leftcount, centercount or rightcount
-		
-		$temp_side = $side;
-		$total_count=1;
-		$i=1;
-		while($total_count>0){
-			$i;
-			$q = mysqli_query($con,"select * from tree where userid='$temp_under_userid'");
-			$r = mysqli_fetch_array($q);
-			$current_temp_side_count = $r[$temp_side_count]+1;
-			$temp_under_userid;
-			$temp_side_count;
-			mysqli_query($con,"update tree set `$temp_side_count`=$current_temp_side_count where userid='$temp_under_userid'");
-			
-			//income
-			if($temp_under_userid!=""){			
-				//change under_userid
-				$next_under_userid = getUnderId($temp_under_userid);
-				$temp_side = getUnderIdPlace($temp_under_userid);
-				$temp_side_count = $temp_side.'count';
-				$temp_under_userid = $next_under_userid;	
-				
-				$i++;
-			}
-			
-			//Chaeck for the last user
-			if($temp_under_userid==""){
-				$total_count=0;
-			}
-			
-		}//Loop
-		
-		
-		
-		
-		echo mysqli_error($con);
-		
-		echo '<script>alert("New user Created Successfully");</script>';
 	}
 	
 }
@@ -128,47 +60,6 @@ function email_check($email){
 		return true;
 	}
 }
-function side_check($email,$side){
-	global $con;
-	
-	$query =mysqli_query($con,"select * from tree where userid='$email'");
-	$result = mysqli_fetch_array($query);
-	$side_value = $result[$side];
-	if($side_value==''){
-		return true;
-	}
-	else{
-		return false;
-	}
-}
-
-function tree($userid){
-	global $con;
-	$data = array();
-	$query = mysqli_query($con,"select * from tree where userid='$userid'");
-	$result = mysqli_fetch_array($query);
-	$data['left'] = $result['left'];
-	$data['center'] = $result['center'];
-	$data['right'] = $result['right'];
-	$data['leftcount'] = $result['leftcount'];
-	$data['centercount'] = $result['centercount'];
-	$data['rightcount'] = $result['rightcount'];
-	
-	return $data;
-}
-function getUnderId($userid){
-	global $con;
-	$query = mysqli_query($con,"select * from user where email='$userid'");
-	$result = mysqli_fetch_array($query);
-	return $result['under_userid'];
-}
-function getUnderIdPlace($userid){
-	global $con;
-	$query = mysqli_query($con,"select * from user where email='$userid'");
-	$result = mysqli_fetch_array($query);
-	return $result['side'];
-}
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -239,9 +130,14 @@ function getUnderIdPlace($userid){
 						<li>
 							<a href="join.php"><i class="fa fa-adjust fa-fw"></i>Join User</a>
 						</li>
-						<li>
-							<a href="tree.php"><i class="fa fa-adjust fa-hub"></i>Tree</a>
-						</li>
+						<?php
+                        if($status == 'active'){
+                            echo 
+                        "<li>
+                            <a href='tree.php'><i class='fa fa-adjust fa-hub'></i>Tree</a>
+                        </li>";
+                        }
+                        ?>
 					</ul>
 				</div>
 				<!-- /.sidebar-collapse -->
@@ -277,23 +173,7 @@ function getUnderIdPlace($userid){
                             <div class="form-group">
                                 <label>Address</label>
                                 <input type="text" name="address" class="form-control" required>
-                            </div>                           
-                            <div class="form-group">
-								<label>Under Userid</label>
-								<select name="under_userid" class="form-control">
-									<option selected disabled required> Select from list of users</option>
-									<?php while($alluser = mysqli_fetch_assoc($all)):;?>
-										<option value="<?php echo $alluser['email']?>" ><?php echo $alluser['email'];?></option>
-									<?php endwhile;?>
-								</select>
-                                
-                            </div>
-                            <div class="form-group">
-                                <label>Side</label><br>
-                                <input type="radio" name="side" value="left"> Left
-								<input type="radio" name="side" value="center"> Center
-                                <input type="radio" name="side" value="right"> Right
-                            </div>                            
+                            </div>                                                    
                             <div class="form-group">
                         	<input type="submit" name="submit" class="btn btn-primary" value="Join">
                         	</div>

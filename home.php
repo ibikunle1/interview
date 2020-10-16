@@ -1,11 +1,15 @@
 <?php
-
 session_start();
+require('connect.php');
 if(isset($_SESSION['id']) && $_SESSION['login_type']=='user'){
+    $userid = $_SESSION['userid'];
 }
 else{
 	echo '<script>alert("Access denied");window.location.assign("index.php");</script>';
 }
+$select = "SELECT * FROM user where email = '$userid' ";
+$query = mysqli_query($con, $select);
+$get = mysqli_fetch_array($query);
 
 ?>
 <!DOCTYPE html>
@@ -75,9 +79,14 @@ else{
                         <li>
                             <a href="join.php"><i class="fa fa-adjust fa-fw"></i>Join User</a>
                         </li>
-                        <li>
-                            <a href="tree.php"><i class="fa fa-adjust fa-hub"></i>Tree</a>
-                        </li>
+                        <?php
+                        if($get['status'] == 'active'){
+                            echo 
+                        "<li>
+                            <a href='tree.php'><i class='fa fa-adjust fa-hub'></i>Tree</a>
+                        </li>";
+                        }
+                        ?>
                     </ul>
                 </div>
                 <!-- /.sidebar-collapse -->

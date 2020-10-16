@@ -25,23 +25,7 @@
 </head>
 
 <body>
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-offset-3 col-md-6">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Name: IBIKUNLE JOHNSON</h3>                        
-                    </div>    
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Mobile: 08102515228</h3>                        
-                    </div> 
-                    <div class="panel-heading">
-                        <h3 class="panel-title">E-mail: teejohnson356@gmail.com</h3>                        
-                    </div>                    
-                </div>
-            </div>
-        </div>
-    </div>
+   
     <div class="container">
         <div class="row">
             <div class="col-md-4 col-md-offset-4">
